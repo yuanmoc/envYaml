@@ -1,0 +1,36 @@
+version: "3.1"
+services: 
+  elasticsearch: 
+    image: elasticsearch:7.7.1
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    restart: "always" #重启策略，能够使服务保持始终运行，生产环境推荐使用
+    container_name: elasticsearch 
+    hostname: elasticsearch
+    environment:
+      - "discovery.type=single-node"     #配置es启动单节点
+      - "cluster.name=EsForLog"          #配置es集群名称
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" #配置es启动参数
+  kibana: 
+    image: kibana:7.7.1
+    restart: "always" #重启策略，能够使服务保持始终运行，生产环境推荐使用
+    container_name: kibana 
+    hostname: kibana
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch  #依赖es，将会在es创建成功后才执行
+    ports:
+      - "5601:5601"
+  logstash: 
+    image: logstash:7.7.1
+    restart: "always" #重启策略，能够使服务保持始终运行，生产环境推荐使用
+    container_name: logstash 
+    hostname: logstash
+    volumes:
+      - ./env/logstash.conf:/usr/share/logstash/pipeline/logstash.conf 
+    depends_on:
+      - elasticsearch #依赖es，将会在es创建成功后才执行
+    ports:
+      - "5044:5044"
